@@ -7,35 +7,34 @@ Original file is located at
     https://colab.research.google.com/drive/11HKY1TUohgM66d--ZiAJzVYDLEB0Bsgb
 """
 
-from init import app, jsonify, bcrypt
-from auth import *
+from init import app, jsonify, bcrypt, request
+from auth import requires_auth,get_token
 from Appdb import User, News
 
 
-class AuthError(Exception):
-    def __init__(self, error, status_code):
-        self.error = error
-        self.status_code = status_code
+@app.route("/user", methods=['POST'])
+@requires_auth
+def user_view():
+    """
+    User endpoint, can only be accessed by an authorized user
+    """
+    data = request.json
+
+    # Check if 'user' key exists in the JSON data
+    if 'user' in data:
+        username = data['user']
+        return f"Received username: {username}"
+    else:
+        return "No username provided in the request"
 
 
-@app.errorhandler(AuthError)
-def handle_auth_error(ex):
-    response = jsonify(ex.error)
-    response.status_code = ex.status_code
-    return response
-
-@app.route('/login')
+@app.route('/login', methods=['POST'])
 def login():
-    id = request.headers.get('User_id')
-    password = request.headers.get("pass")
-    hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
-    x = User.query.filter_by(id=id).first();
+    data = get_token()
+    return data
 
 
-
-
-
-@app.route('/')
+@app.route('/', methods=['POST'])
 def index_view():
     return jsonify(msg="hello world")
 

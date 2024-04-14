@@ -1,6 +1,46 @@
-from init import jsonify, app, request
+import json
+from urllib.request import urlopen
+import http.client
+from jose import jwt
+from six import wraps
+
+from init import jsonify, request, app, _request_ctx_stack
+from flask_cors import cross_origin
+
+AUTH0_DOMAIN = 'dev-53r8huk0ec1izv3d.us.auth0.com'
+API_IDENTIFIER = 'https://secure-news-aap'
+ALGORITHMS = ["RS256"]
 
 
+def get_token():
+    conn = http.client.HTTPSConnection("dev-53r8huk0ec1izv3d.us.auth0.com")
+
+    payload = "{\"client_id\":\"pJ3BRbkMqiOHfvnsSYig1axsFLII7pCx\"," \
+              "\"client_secret\":\"_ApM6_oRJwxKLgAmyGyyfi-mXuP7FQKH6XsvrSMIx4leylNY934Cvv0p8OK167Yu\"," \
+              "\"audience\":\"https://secure-news-aap\",\"grant_type\":\"client_credentials\"} "
+
+    headers = {'content-type': "application/json"}
+
+    conn.request("POST", "/oauth/token", payload, headers)
+
+    res = conn.getresponse()
+    data = res.read()
+
+    print(data)
+    return data.decode("utf-8")
+
+
+class AuthError(Exception):
+    def __init__(self, error, status_code):
+        self.error = error
+        self.status_code = status_code
+
+
+@app.errorhandler(AuthError)
+def handle_auth_error(ex):
+    response = jsonify(ex.error)
+    response.status_code = ex.status_code
+    return response
 
 
 def get_token_auth_header():
@@ -31,3 +71,55 @@ def get_token_auth_header():
 
     token = parts[1]
     return token
+
+
+def requires_auth(f):
+    """
+    Determines if the Access Token is valid
+    """
+
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = get_token_auth_header()
+        jsonurl = urlopen("https://" + AUTH0_DOMAIN + "/.well-known/jwks.json")
+        jwks = json.loads(jsonurl.read())
+        unverified_header = jwt.get_unverified_header(token)
+        rsa_key = {}
+        for key in jwks["keys"]:
+            if key["kid"] == unverified_header["kid"]:
+                rsa_key = {
+                    "kty": key["kty"],
+                    "kid": key["kid"],
+                    "use": key["use"],
+                    "n": key["n"],
+                    "e": key["e"]
+                }
+        if rsa_key:
+            try:
+                payload = jwt.decode(
+                    token,
+                    rsa_key,
+                    algorithms=ALGORITHMS,
+                    audience=API_IDENTIFIER,
+                    issuer="https://" + AUTH0_DOMAIN + "/"
+                )
+            except jwt.ExpiredSignatureError:
+                raise AuthError({"code": "token_expired",
+                                 "description": "token is expired"}, 401)
+            except jwt.JWTClaimsError:
+                raise AuthError({"code": "invalid_claims",
+                                 "description":
+                                     "incorrect claims,"
+                                     "please check the audience and issuer"}, 401)
+            except Exception:
+                raise AuthError({"code": "invalid_header",
+                                 "description":
+                                     "Unable to parse authentication"
+                                     " token."}, 401)
+
+            _request_ctx_stack.top.current_user = payload
+            return f(*args, **kwargs)
+        raise AuthError({"code": "invalid_header",
+                         "description": "Unable to find appropriate key"}, 401)
+
+    return decorated

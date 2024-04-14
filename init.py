@@ -1,6 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request,_request_ctx_stack
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 import spacy
