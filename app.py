@@ -8,8 +8,28 @@ Original file is located at
 """
 
 from init import app, jsonify, bcrypt, request, db
+import json
 from auth import requires_auth, get_token
 from Appdb import User, News
+from Project.NewsApp import location_data,id_data
+
+@app.route('/getnews',methods=['POST'])
+def getnews():
+    a = location_data("any")
+    a = json.dumps(a)
+    return a
+
+
+@app.route('/getnewsspecific',methods=['POST'])
+def getnewsspecific():
+    data = request.get_json()
+    if 'id' in data:
+        id = int(data['id'])
+        news = id_data(id)
+        news = json.dumps(news)
+        return news,200
+
+    else: return  403
 
 
 @app.route("/user", methods=['POST'])
