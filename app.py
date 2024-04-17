@@ -7,8 +7,8 @@ Original file is located at
     https://colab.research.google.com/drive/11HKY1TUohgM66d--ZiAJzVYDLEB0Bsgb
 """
 
-from init import app, jsonify, bcrypt, request
-from auth import requires_auth,get_token
+from init import app, jsonify, bcrypt, request, db
+from auth import requires_auth, get_token
 from Appdb import User, News
 
 
@@ -30,8 +30,46 @@ def user_view():
 
 @app.route('/login', methods=['POST'])
 def login():
-    data = get_token()
-    return data
+    print("dopmg")
+    data = request.get_json()
+    print(data)
+    if 'user' in data:
+        email = data['user']
+        us = User.query.filter_by(email=email).first()
+        print(us)
+        if us is None:
+            return "user not found", 404
+        if 'password' in data:
+            password = data['password']
+            is_valid = bcrypt.check_password_hash(us.password, password)
+            if is_valid:
+                data = get_token()
+                print(us.id)
+                return {'data':data, 'id':us.id}, 200
+            else:
+                return "forbidden", 403
+        else:
+            return "password not found", 400
+    else:
+        return "user not found", 400
+
+
+@app.route('/register', methods=['POST'])
+def register():
+    data = request.get_json()
+    print(data)
+    if 'user' in data and 'password' in data:
+        email = data['user']
+        password = data['password']
+        us = User.query.filter_by(email=email).first()
+        if us is not None:
+            return  "user already exists",403
+        hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
+        user = User(email=email, password=hashed_password)
+        db.session.add(user)
+        db.session.commit()
+        data = get_token()
+        return data, 200
 
 
 @app.route('/', methods=['POST'])

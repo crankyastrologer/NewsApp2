@@ -3,21 +3,22 @@ from urllib.request import urlopen
 import http.client
 from jose import jwt
 from six import wraps
+from dotenv import load_dotenv
+
 
 from init import jsonify, request, app, _request_ctx_stack
 from flask_cors import cross_origin
-
-AUTH0_DOMAIN = 'dev-53r8huk0ec1izv3d.us.auth0.com'
-API_IDENTIFIER = 'https://secure-news-aap'
-ALGORITHMS = ["RS256"]
+import os
+load_dotenv()
+AUTH0_DOMAIN = os.getenv('AUTH0_DOMAIN')
+API_IDENTIFIER = os.getenv('API_IDENTIFIER')
+ALGORITHMS = os.getenv('ALGORITHMS')
 
 
 def get_token():
     conn = http.client.HTTPSConnection("dev-53r8huk0ec1izv3d.us.auth0.com")
 
-    payload = "{\"client_id\":\"pJ3BRbkMqiOHfvnsSYig1axsFLII7pCx\"," \
-              "\"client_secret\":\"_ApM6_oRJwxKLgAmyGyyfi-mXuP7FQKH6XsvrSMIx4leylNY934Cvv0p8OK167Yu\"," \
-              "\"audience\":\"https://secure-news-aap\",\"grant_type\":\"client_credentials\"} "
+    payload = os.getenv('PAYLOAD')
 
     headers = {'content-type': "application/json"}
 
