@@ -5,8 +5,8 @@ from urllib.parse import urlparse
 
 class MySpider(scrapy.Spider):
     name = 'myspider'
-    start_urls = ['https://ndtv.com/']  # Replace with your website's URL
-    allowed_domains = ['ndtv.com']  # Replace with your website's domain
+    start_urls = ['https://hindustantimes.com/']  # Replace with your website's URL
+    allowed_domains = ['hindustantimes.com']  # Replace with your website's domain
     custom_settings = {
         'DEPTH_LIMIT': 5  # Change this to the maximum depth you want to allow
     }

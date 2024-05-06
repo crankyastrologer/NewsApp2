@@ -83,13 +83,15 @@ def register():
         password = data['password']
         us = User.query.filter_by(email=email).first()
         if us is not None:
+            print(us.email)
             return  "user already exists",403
         hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
         user = User(email=email, password=hashed_password)
         db.session.add(user)
         db.session.commit()
+        us = User.query.filter_by(email=email).first()
         data = get_token()
-        return data, 200
+        return {'data':data, 'id':us.id}, 200
 
 
 @app.route('/', methods=['POST'])

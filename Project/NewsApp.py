@@ -64,7 +64,7 @@ def genre_data(genre):
 
 def location_data(location):
     curs = conn.cursor()
-    curs.execute("Select ID,Title,TopImage from data ")
+    curs.execute("Select ID,Title,TopImage from data WHERE title IN (SELECT DISTINCT title FROM data)  ")
     record = curs.fetchall()
     for row in record:
         print("Title: \t\t", row[0])
@@ -107,7 +107,7 @@ def get_date(file_path):
     # Regular expression pattern to match dates and times
     datetime_pattern = r'\b\d{4}:\d{2}:\d{2}\b'
     # Open the file in read mode
-    with open(file_path, 'r') as file:
+    with open(file_path, 'r', errors='ignore') as file:
         # Read the file content
         content = file.read()
         # Find all matches of the pattern
@@ -124,16 +124,16 @@ def get_txt():
     for i in subfolders:
         folder_path = os.path.join(data, i)
         file_name = dfs_folder(folder_path)
+        print(i)
         if file_name.endswith(".txt"):
             file_path = os.path.join(folder_path, file_name)
-            with open(file_path, 'r') as f:
+            with open(file_path, 'r', errors='ignore') as f:
                 content = f.readlines()
 
                 text = ""
-                for i in content[4:]:
-                    if i != "\n":
-                        text = text + i
-                print(text)
+                for j in content[4:]:
+                    if j != "\n":
+                        text = text + j
                 # Assuming enter_data is a function to insert data into the database
                 # Replace 'your_table_name', 'column1', 'column2', etc. with your actual table and column names
                 sql = "INSERT INTO data (Title,TopImage,content,Date,Genre,Location) VALUES (%s, %s, %s, %s, %s, %s)"
