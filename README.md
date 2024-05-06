@@ -1,5 +1,5 @@
 # NewsApp
-##About
+## About
 In this project we are basically scraping the news websites for news that is then categorized by the nlp model which is
 stored in a database to be served by the API server based on Flask to serve them.
 ##Installation
@@ -17,6 +17,6 @@ cd Project
 spyder run  Myspider
 ```
 you can make the required changed to scarping in `Myspider` class 
-##Usage
+## Usage
 It was created to use with a website designed to serve user with desired news which you can find here 
 ``https://github.com/crankyastrologer/NewsApp``
